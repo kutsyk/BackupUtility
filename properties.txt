@@ -1,0 +1,4 @@
+ftp=ftp.charlesworth-group.com
+user=guest
+pass=guest99
+path=software/backup

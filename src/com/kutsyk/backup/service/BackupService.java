@@ -5,12 +5,9 @@ import com.kutsyk.backup.ftp.FTPUtility;
 import com.kutsyk.backup.zip.ZipDirectory;
 
 import java.io.*;
-import java.lang.management.BufferPoolMXBean;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
 
 /**
  * Created by KutsykV on 09.06.2015.
@@ -26,22 +23,36 @@ public class BackupService {
     private int port = 21;
     private String user = "";
     private String pass = "";
+    private String time = "";
+    private FTPUtility utility;
 
     public BackupService() {
         zipDirectory = new ZipDirectory();
-        localFolder = System.getProperty("user.dir");
+        File currentDirectory = new File(new File(".").getAbsolutePath());
+        try {
+            localFolder = currentDirectory.getCanonicalPath();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         fillFtpData();
+        utility = new FTPUtility(server, port, user, pass);
+        try {
+            utility.connect();
+        } catch (FTPException e) {
+            e.printStackTrace();
+        }
     }
 
     void fillFtpData() {
         Properties defaultProps = new Properties();
         try {
-            FileInputStream in = new FileInputStream("properties.txt");
+            FileInputStream in = new FileInputStream(localFolder+"\\properties.txt");
             defaultProps.load(in);
             server = defaultProps.getProperty("ftp");
             user = defaultProps.getProperty("user");
             pass = defaultProps.getProperty("pass");
             ftpPath = defaultProps.getProperty("path");
+            time = defaultProps.getProperty("time");
             in.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -49,47 +60,54 @@ public class BackupService {
     }
 
     public void doBackup() {
-        zipFolder();
-        sendToFTP();
+        if(!existTodaysBackup() && timeToStartBackup()) {
+            zipFolder();
+            sendToFTP();
+        }
+    }
+
+    private boolean existTodaysBackup(){
+        Date currentDate = Calendar.getInstance().getTime();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String today = sdf.format(currentDate);
+        return utility.dirExists(ftpPath,today);
+    }
+
+    private boolean timeToStartBackup(){
+        Date currentDate = Calendar.getInstance().getTime();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+        String today = sdf.format(currentDate);
+        return today.equals(time);
     }
 
     void zipFolder() {
+        localZipPath = localFolder + "\\"+localFolder.substring(localFolder.lastIndexOf("\\")+1)+".zip";
+        File zip = new File(localZipPath);
+        if(zip.exists())
+            zip.delete();
         File directoryToZip = new File(localFolder);
         List<File> fileList = new ArrayList<File>();
         zipDirectory.getAllFiles(directoryToZip, fileList);
-//        System.out.println("Local: " + localFolder);
-//        System.out.println(directoryToZip);
         zipDirectory.writeZipFile(directoryToZip, fileList);
-        localZipPath = localFolder + "\\"+localFolder.substring(localFolder.lastIndexOf("\\")+1)+".zip";
-        System.out.println(localZipPath);
     }
 
     void sendToFTP() {
-        System.out.println("VLAS");
-        FTPUtility utility = new FTPUtility(server, port, user, pass);
         Date currentDate = Calendar.getInstance().getTime();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String today = sdf.format(currentDate);
         String remoteFile = ftpPath + "/" + today;
-
         try {
             utility.connect();
-            System.out.println(localZipPath);
             File uploadFile = new File(localZipPath);
-            System.out.println("here");
             utility.uploadFile(uploadFile, remoteFile);
-            System.out.println("after");
             FileInputStream inputStream = new FileInputStream(uploadFile);
             byte[] buffer = new byte[4096];
             int bytesRead = -1;
-
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 utility.writeFileBytes(buffer, 0, bytesRead);
             }
             inputStream.close();
             utility.finish();
-            System.out.println(remoteFile);
-            System.out.println("GINISH");
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
@@ -99,6 +117,5 @@ public class BackupService {
                 e.printStackTrace();
             }
         }
-        System.out.println("END");
     }
 }

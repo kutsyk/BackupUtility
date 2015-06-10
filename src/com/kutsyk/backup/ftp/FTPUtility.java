@@ -2,6 +2,7 @@ package com.kutsyk.backup.ftp;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
 import java.io.*;
@@ -82,6 +83,18 @@ public class FTPUtility {
             }
         }
         return true;
+    }
+
+    public boolean dirExists(String parent, String dir) {
+        if (ftpClient.isConnected())
+            try {
+                for(FTPFile ftpFile: ftpClient.listDirectories(parent))
+                    if(ftpFile.getName().equals(dir))
+                        return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        return false;
     }
 
     /**

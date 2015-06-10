@@ -57,36 +57,45 @@ public class BackupService {
         File directoryToZip = new File(localFolder);
         List<File> fileList = new ArrayList<File>();
         zipDirectory.getAllFiles(directoryToZip, fileList);
-        System.out.println("Local: " + localFolder);
-        System.out.println(directoryToZip);
+//        System.out.println("Local: " + localFolder);
+//        System.out.println(directoryToZip);
         zipDirectory.writeZipFile(directoryToZip, fileList);
-        localFolder += directoryToZip + ".zip";
+        localZipPath = localFolder + "\\"+localFolder.substring(localFolder.lastIndexOf("\\")+1)+".zip";
+        System.out.println(localZipPath);
     }
 
     void sendToFTP() {
+        System.out.println("VLAS");
         FTPUtility utility = new FTPUtility(server, port, user, pass);
         Date currentDate = Calendar.getInstance().getTime();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         String today = sdf.format(currentDate);
-        String remoteFile = ftpPath + "/" + today + ".zip";
+        String remoteFile = ftpPath + "/" + today;
+
         try {
             utility.connect();
-            File uploadFile = new File(localFolder);
+            System.out.println(localZipPath);
+            File uploadFile = new File(localZipPath);
+            System.out.println("here");
             utility.uploadFile(uploadFile, remoteFile);
+            System.out.println("after");
             FileInputStream inputStream = new FileInputStream(uploadFile);
             byte[] buffer = new byte[4096];
             int bytesRead = -1;
+
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 utility.writeFileBytes(buffer, 0, bytesRead);
             }
             inputStream.close();
             utility.finish();
+            System.out.println(remoteFile);
             System.out.println("GINISH");
         } catch (Exception ex) {
+            ex.printStackTrace();
         } finally {
             try {
                 utility.disconnect();
-            } catch (FTPException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

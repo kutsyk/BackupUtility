@@ -4,9 +4,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 /**
  * A utility class that provides functionality for uploading files to a FTP
@@ -61,11 +59,10 @@ public class FTPUtility {
     }
 
     /**
-     *  * This utility class provides a method that creates a nested directory
-     *  * structure on a FTP server, based on Apache Commons Net library.
-     *  * @author www.codejava.net
-     *  *
-     *
+     * * This utility class provides a method that creates a nested directory
+     * * structure on a FTP server, based on Apache Commons Net library.
+     * * @author www.codejava.net
+     * *
      */
     public boolean makeDirectories(String dirPath) throws IOException {
         String[] pathElements = dirPath.split("/");

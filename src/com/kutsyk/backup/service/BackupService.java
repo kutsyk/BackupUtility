@@ -49,6 +49,7 @@ public class BackupService {
             FileInputStream in = new FileInputStream(localFolder+"\\properties.txt");
             defaultProps.load(in);
             server = defaultProps.getProperty("ftp");
+            port = Integer.parseInt(defaultProps.getProperty("port", "21"));
             user = defaultProps.getProperty("user");
             pass = defaultProps.getProperty("pass");
             ftpPath = defaultProps.getProperty("path");
@@ -60,13 +61,15 @@ public class BackupService {
     }
 
     public void doBackup() {
-        if(!existTodaysBackup() && timeToStartBackup()) {
+        System.out.println(existsTodaysBackup());
+//        if(!existsTodaysBackup() && timeToStartBackup()) {
             zipFolder();
             sendToFTP();
-        }
+//            deleteZipFolder();
+//        }
     }
 
-    private boolean existTodaysBackup(){
+    private boolean existsTodaysBackup(){
         Date currentDate = Calendar.getInstance().getTime();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String today = sdf.format(currentDate);
@@ -89,6 +92,19 @@ public class BackupService {
         List<File> fileList = new ArrayList<File>();
         zipDirectory.getAllFiles(directoryToZip, fileList);
         zipDirectory.writeZipFile(directoryToZip, fileList);
+//        deleteFiles(fileList);
+    }
+
+    private void deleteFiles(List<File> fileList) {
+        for (File file : fileList) {
+            if (!file.getName().equals("properties.txt"))
+                file.delete();
+        }
+    }
+
+    private void deleteZipFolder(){
+        File file = new File(localZipPath);
+        file.delete();
     }
 
     void sendToFTP() {

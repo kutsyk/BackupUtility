@@ -86,14 +86,19 @@ public class FTPUtility {
     }
 
     public boolean dirExists(String parent, String dir) {
-        if (ftpClient.isConnected())
-            try {
-                for(FTPFile ftpFile: ftpClient.listDirectories(parent))
-                    if(ftpFile.getName().equals(dir))
-                        return true;
-            } catch (IOException e) {
-                e.printStackTrace();
+        try {
+            if (!ftpClient.isConnected()) {
+                connect();
             }
+            for (FTPFile ftpFile : ftpClient.listDirectories(parent)) {
+                if (ftpFile.getName().equals(dir))
+                    return true;
+            }
+            if (ftpClient.isConnected())
+                disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return false;
     }
 

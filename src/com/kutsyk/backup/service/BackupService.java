@@ -61,12 +61,11 @@ public class BackupService {
     }
 
     public void doBackup() {
-        System.out.println(existsTodaysBackup());
-//        if(!existsTodaysBackup() && timeToStartBackup()) {
+        if(!existsTodaysBackup() && timeToStartBackup()) {
             zipFolder();
             sendToFTP();
-//            deleteZipFolder();
-//        }
+            deleteZipFolder();
+        }
     }
 
     private boolean existsTodaysBackup(){
@@ -92,11 +91,13 @@ public class BackupService {
         List<File> fileList = new ArrayList<File>();
         zipDirectory.getAllFiles(directoryToZip, fileList);
         zipDirectory.writeZipFile(directoryToZip, fileList);
-//        deleteFiles(fileList);
+        deleteFiles(fileList);
     }
 
     private void deleteFiles(List<File> fileList) {
         for (File file : fileList) {
+            if (file.isDirectory())
+                deleteFiles(Arrays.asList(file.listFiles()));
             if (!file.getName().equals("properties.txt"))
                 file.delete();
         }

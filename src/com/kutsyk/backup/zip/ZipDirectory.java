@@ -18,6 +18,8 @@ public class ZipDirectory {
     public static void getAllFiles(File dir, List<File> fileList) {
         File[] files = dir.listFiles();
         for (File file : files) {
+            if(file.getName().equals("properties.txt") || file.getName().equals("BackupUtility.jar"))
+                continue;
             fileList.add(file);
             if (file.isDirectory()) {
                 getAllFiles(file, fileList);

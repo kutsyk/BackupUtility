@@ -31,10 +31,6 @@ public class Starter {
         File currentDirectory = new File(new File(".").getAbsolutePath());
         try {
             localPath = currentDirectory.getCanonicalPath();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
             PrintWriter writer = new PrintWriter(batFile);
             writer.println("cd " + localPath);
             writer.println(localPath.substring(0, localPath.indexOf(":")+1));
